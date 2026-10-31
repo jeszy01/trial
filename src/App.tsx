@@ -179,10 +179,12 @@ export default function App() {
         late_min: r.late, undertime_min: r.under, overtime_min: r.ot, total_hours: +hrs(r.worked),
         days_worked: r.days, updated_at: new Date().toISOString(),
       }));
-      for (let i = 0; i < recs.length; i += 500) {
-        await supabase.from("attendance_records").upsert(recs.slice(i, i + 500), { onConflict: "employee_no,date" });
+            for (let i = 0; i < recs.length; i += 500) {
+        const { error } = await supabase.from("attendance_records").upsert(recs.slice(i, i + 500), { onConflict: "employee_no,date" });
+        if (error) console.error("sync failed:", error);
       }
-      await supabase.from("attendance_records").delete().not("employee_no", "in", `(${emps.map((e) => `"${e.no}"`).join(",")})`);
+      const { error: delError } = await supabase.from("attendance_records").delete().not("employee_no", "in", `(${emps.map((e) => `"${e.no}"`).join(",")})`);
+      if (delError) console.error("cleanup failed:", delError);
     }, 1500);
     return () => clearTimeout(t);
   }, [allRows, emps]);
