@@ -153,6 +153,30 @@ export default function App() {
       };
     }), [rows, emps, fe]);
 
+  const allRows = useMemo(() => {
+    const dates = [...punches.map((p) => p.date), ...leaves.map((l) => l.date)].sort();
+    const start = dates[0] ?? today();
+    const days = range(start, today());
+    return emps.flatMap((e) => days.map((d) => build(e, d, shifts, punches, leaves, holidays, s)));
+  }, [emps, shifts, punches, leaves, holidays, s]);
+
+  useEffect(() => {
+    if (!emps.length) return;
+    const t = setTimeout(async () => {
+      const recs = allRows.map((r) => ({
+        employee_no: r.no, employee_name: r.name, date: r.date, shift: r.shift, day_type: r.dayType,
+        status: r.status, leave_type: r.leaveType, time_in: r.timeIn, time_out: r.timeOut,
+        late_min: r.late, undertime_min: r.under, overtime_min: r.ot, total_hours: +hrs(r.worked),
+        days_worked: r.days, updated_at: new Date().toISOString(),
+      }));
+      for (let i = 0; i < recs.length; i += 500) {
+        await supabase.from("attendance_records").upsert(recs.slice(i, i + 500), { onConflict: "employee_no,date" });
+      }
+      await supabase.from("attendance_records").delete().not("employee_no", "in", `(${emps.map((e) => `"${e.no}"`).join(",")})`);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [allRows, emps]);
+
   const loadSeed = () => {
     const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return fmt(d); };
     const hm = (t: string, d: number) => {
