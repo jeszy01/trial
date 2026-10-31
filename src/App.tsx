@@ -123,7 +123,7 @@ export default function App() {
   const [holidays, setHolidays] = useStore<Holiday[]>("att:holidays", []);
   const [s, setS] = useStore<Settings>("att:settings", { breakMin: 60, graceMin: 0, otMinMin: 5 });
 
-  const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 20); return fmt(d); });
+  const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 35); return fmt(d); });
   const [to, setTo] = useState(today());
   const [fe, setFe] = useState("all");
   const [ce, setCe] = useState("");
@@ -213,7 +213,7 @@ export default function App() {
     const lv: Leave[] = [
       { id: uid(), empId: "e2", date: addDays(-5), type: "Sick", paid: true },
       { id: uid(), empId: "e5", date: addDays(-12), type: "Emergency", paid: false },
-      ...range(addDays(-20), addDays(-1)).filter((d) => dow(d) !== 0).map((d) => ({ id: uid(), empId: "e11", date: d, type: "Vacation", paid: true })),
+      ...range(addDays(-35), addDays(-1)).filter((d) => dow(d) !== 0).map((d) => ({ id: uid(), empId: "e11", date: d, type: "Vacation", paid: true })),
     ];
     const hol: Holiday[] = [
       { id: uid(), date: addDays(-10), name: "Sample Regular Holiday", type: "Regular Holiday" },
@@ -222,7 +222,7 @@ export default function App() {
     const pu: Punch[] = [];
     em.forEach((e, ei) => {
       const s0 = sh.find((x) => x.id === e.shiftId)!;
-      for (let n = -20; n <= -1; n++) {
+      for (let n = -35; n <= -1; n++) {
         const date = addDays(n);
         const i = Math.abs(n) + ei * 3;
         if (dow(date) === e.restDay) continue;
@@ -236,7 +236,7 @@ export default function App() {
         pu.push({ id: uid(), empId: e.id, date, timeIn: tin, timeOut: tout });
       }
     });
-    const rd = range(addDays(-20), addDays(-1)).find((d) => dow(d) === 0);
+    const rd = range(addDays(-35), addDays(-1)).find((d) => dow(d) === 0);
     if (rd) pu.push({ id: uid(), empId: "e1", date: rd, timeIn: "08:00", timeOut: "17:00" }); // rest day work
     setShifts(sh); setEmps(em); setLeaves(lv); setHolidays(hol); setPunches(pu);
   };
