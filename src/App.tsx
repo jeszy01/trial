@@ -36,14 +36,24 @@ function useStore<T>(key: string, init: T) {
   const [v, setV] = useState<T>(init);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    supabase.from("app_data").select("value").eq("key", key).maybeSingle().then(({ data }) => {
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase.from("app_data").select("value").eq("key", key).maybeSingle();
+      if (!alive) return;
+      if (error) { console.error("load failed:", key, error); return; }
       if (data) setV(data.value as T);
       setReady(true);
-    });
+    })();
+    return () => { alive = false; };
   }, [key]);
   useEffect(() => {
     if (!ready) return;
-       supabase.from("app_data").upsert({ key, value: v, updated_at: new Date().toISOString() }).then(({ error }) => { if (error) console.error(error); });
+    (async () => {
+      const { error } = await supabase
+        .from("app_data")
+        .upsert({ key, value: v, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) console.error("save failed:", key, error);
+    })();
   }, [key, v, ready]);
   return [v, setV] as const;
 }
