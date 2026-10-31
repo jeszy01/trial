@@ -43,7 +43,7 @@ function useStore<T>(key: string, init: T) {
   }, [key]);
   useEffect(() => {
     if (!ready) return;
-    supabase.from("app_data").upsert({ key, value: v, updated_at: new Date().toISOString() });
+       supabase.from("app_data").upsert({ key, value: v, updated_at: new Date().toISOString() }).then(({ error }) => { if (error) console.error(error); });
   }, [key, v, ready]);
   return [v, setV] as const;
 }
